@@ -163,11 +163,15 @@ float: left;
 clear: both;
 }
 .bookLink {
-
 }
 .link{
-	margin: 4px 9%;
+margin: 4px 9%;
 }
 .pages {
-	margin: 0px 10%;
+margin: 0px 10%;
+}
+.grid {
+float: left;
+width: 50%;
+height: 500px;
 }

@@ -4,9 +4,30 @@ $(document).ready(function() {
         var searchVal = $("#searchTerm").val();
         var url = "https://www.googleapis.com/books/v1/volumes?q=" + searchVal;
         searchBooks(url);
+        $(".view").val('Grid');
         $(".pages").html("Pages: ");
-        for (i = 1; i <= 5; i++) // 5 is hard coded, a better solutions is to determine if there are five pages.
+        for (i = 1; i <= 5; i++)
             $(".pages").append("<a href='#'>" + i + "</a> ");
+    });
+    //Shelf function
+    $(".shelf").click(function() {
+        var url = "https://www.googleapis.com/books/v1/users/114260455974328168812/bookshelves/1001/volumes";
+        bookShelf(url);
+        $(".pages").html(" ");
+        $(".view").val('Grid');
+    });
+    //View toggle
+    $(".view").click(function() {
+        if (!$(".row").hasClass('grid')) {
+            $('.row').addClass('grid');
+            $(".view").val('List');
+        } else if ($('.row').hasClass('grid')) {
+            $('.row').removeClass('grid');
+            $(".view").val('Grid');
+        }
+    });
+    $(".close").click(function() {
+        $(".modal").html(" ");
     });
 
     function searchBooks(servicePoint) {
@@ -14,23 +35,9 @@ $(document).ready(function() {
         $.getJSON(servicePoint, function(jsonData) {
             console.log(jsonData);
             $(".searchResults").html("");
-            $.each(jsonData.items, function(index, item) {
-                var bookTitle = item.volumeInfo.title;
-                var bookid = item.id;
-                var selfLink = item.selfLink;
-                var link = item.volumeInfo.infoLink;
-                var cover = item.volumeInfo.imageLinks.smallThumbnail;
-                var description = item.volumeInfo.description;
-                resultHTML += "<div class='row'>";
-                resultHTML += "<h3>" + bookTitle + "</h3>";
-                resultHTML += "<img src='" + cover + "' alt='" + bookTitle + "'class='img-responsive'>";
-                resultHTML += "<button type='button'" + "id='" + bookid + "' class='bookLink btn btn-info'" + "data-target='." + bookid + "'data-toggle='modal" + "'>More Info" + "</button>";
-                resultHTML += "<hr>";
-                resultHTML += "</div>";
-                resultHTML += "<div class='modal " + bookid + "' role='" + "dialog'>";
-                resultHTML += "</div>";
-            });
-            $(".searchResults").append(resultHTML);
+            var template = $('#results').html();
+            var html = Mustache.render(template, jsonData);
+            $(".searchResults").append(html);
             $(".bookLink").on('click', function() {
                 getBookDetails($(this).attr("id"));
             });
@@ -38,23 +45,25 @@ $(document).ready(function() {
     }
 
     function getBookDetails(bookid) {
+        $(".modal").html(" ");
         $.getJSON("https://www.googleapis.com/books/v1/volumes/" + bookid, function(jsonData) {
-            var bookTitle = jsonData.volumeInfo.title;
-            var authors = jsonData.volumeInfo.authors;
-            var cover = jsonData.volumeInfo.imageLinks.smallThumbnail;
-            var description = jsonData.volumeInfo.description;
-            var publisher = jsonData.volumeInfo.publisher;
-            var publishedDate = jsonData.volumeInfo.publishedDate;
             console.log(jsonData);
-            $("." + bookid).html(" ");
-            $("." + bookid).append("<div class='modal-dialog'>" + "</div>");
-            $(".modal-dialog").append("<div class='modal-content'>" + "</div>");
-            $(".modal-content").append("<div class='modal-header'>" + "<button type='button' class='close' data-dismiss='modal'>&times;" + "</button>" + "</div>");
-            $(".modal-header").append("<h4 class='modal-title'>" + bookTitle + "</h4>");
-            $(".modal-header").append("Author(s)" + "<h4>" + authors + "</h4>");
-            $(".modal-content").append("<div class='modal-body'>" + "<img src='" + cover + "' alt='" + bookTitle + "'class='img-responsive'>" + "</div>");
-            $(".modal-body").append(description);
-            $(".modal-content").append("<div class='modal-footer'>" + " Publisher: " + publisher + " published Date: " + publishedDate + "</div>");
+            var template = $('#singleBook').html();
+            var html = Mustache.render(template, jsonData);
+            $(".modal").append(html);
+        });
+    }
+    //Retrieves the bookshelf & volumes of the bookshelf
+    function bookShelf(servicePoint) {
+        $.getJSON(servicePoint, function(jsonData) {
+            console.log(jsonData);
+            $(".searchResults").html(" ");
+            var template = $('#bookShelfTemp').html();
+            var html = Mustache.render(template, jsonData);
+            $(".searchResults").append(html);
+            $(".bookLink").on('click', function() {
+                getBookDetails($(this).attr("id"));
+            });
         });
     }
     $(".pages").on('click', function(event) {
